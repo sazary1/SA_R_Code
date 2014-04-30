@@ -1,3 +1,6 @@
+###################################################################
+#SA
+##################################################################
 setwd("/Users/saeedehazary/Documents/RNAseq/src")
 
 ####################################################################
@@ -425,7 +428,7 @@ ref_alt_genome_b$alt
 
 
 ###########
-#count
+#count and fold change
 ###########
 #subseting a transcript
 sub_sub_count_norm=data.frame(subset(sub_count_norm, sub_count_norm$Transcript_ID==sub_count_norm[t,1]), row.names=NULL)
@@ -442,6 +445,8 @@ sub_sub_count_norm[sub_sub_count_norm<x]<-NA
 sub_sub_count_norm[sub_sub_count_norm>y]<-NA
 #ci=(ni-mean)/sd
 sub_sub_count_norm<- (sub_sub_count_norm-mean)/sd
+
+
 
 
 #########
