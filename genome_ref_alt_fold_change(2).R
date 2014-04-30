@@ -55,25 +55,7 @@ dim(count)
 
 colnames(count)[1]="Transcript_ID"
 
-#checking
-###grep('NM000017', count$Transcript_ID)
-###grep('NM000022', count$Transcript_ID)
 
-# we need as.character to be able to sort the data 
-typeof(count$Transcript_ID)
-l=as.character(count$Transcript_ID)
-count['Transcript_ID']=l
-
-#sorting the data by ID
-count_ordered=count[order(count$Transcript_ID),]
-
-
-#We want to exclude those 235 transcripts that are excluded from refflat file because of error creation and we donot have genome similarity matrix for them 
-#and make count file to have  15700 Transcripts 
-
-count_b=count_ordered[(count_ordered$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
-###count=data.frame(count, row.names=NULL)
-#15700 133 (These are are in both file)
 
 ###########################count_fold_change#############################################################
 ##########################Reading allele counts for all transcripts in 66 CEU population############################
@@ -110,22 +92,6 @@ for(j in list2$ID ) {
 }
 
 colnames(count_fold_change)[1]="Transcript_ID"
-
-# we need as.character to be able to sort the data 
-typeof(count_fold_change$Transcript_ID)
-l=as.character(count_fold_change$Transcript_ID)
-count_fold_change['Transcript_ID']=l
-
-#sorting the data by ID
-count_fold_change_ordered=count_fold_change[order(count_fold_change$Transcript_ID),]
-
-
-#We want to exclude those 235 transcripts that are excluded from refflat file because of error creation and we donot have genome similarity matrix for them 
-#and make count file to have  15700 Transcripts 
-
-count_fc=count_fold_change_ordered[(count_fold_change_ordered$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
-###count_fold_change=data.frame(count_fold_change, row.names=NULL)
-#15700 (These are are in both file)
 
 ###########################################################################################################
 #Normalizing the count data
@@ -205,6 +171,7 @@ count_norm <- data.frame(sweep(as.matrix(count_132), MARGIN = 2,norm_factors_dup
 #15935 132
 
 count_norm=cbind(rownames(count_norm),count_norm , row.names=NULL)
+dim(count_norm)
 #15935 133
 
 colnames(count_norm)[1]="Transcript_ID" 
@@ -312,6 +279,8 @@ refFlat.new_nodup_b
 ###refFlat.new_nodup_c <- data.frame(subset(refFlat.new_nodup_b, refFlat.new_nodup_b$Transcript_ID %in% count_norm$Transcript_id))
 refFlat.new_nodup_c=merge(refFlat.new_nodup_b, count, by="Transcript_ID", all.count=all)
 dim(refFlat.new_nodup_c)
+
+
 #15700 141
 
 refFlat.new_nodup_c=refFlat.new_nodup_c[order(refFlat.new_nodup_c$Transcript_ID),]
@@ -346,10 +315,28 @@ grep ('NM000017', count$Transcript_ID)
 #############################################################################################################
 
 
-sub_count_norm=merge(refFlat.new_nodup_b,count_norm, by="Transcript_ID", all.count_norm=all)
+#checking
+###grep('NM000017', count_norm$Transcript_ID)
+###grep('NM000022', count_norm$Transcript_ID)
 
-#we do not need column2:9
-sub_count_norm=sub_count_norm[, c(1,10:141)]
+# we need as.character to be able to sort the data 
+typeof(count_norm$Transcript_ID)
+l=as.character(count_norm$Transcript_ID)
+count_norm['Transcript_ID']=l
+
+#sorting the data by ID
+count_norm_ordered=count[order(count_norm$Transcript_ID),]
+
+
+#We want to exclude those 235 transcripts that are excluded from refflat file because of error creation and we donot have genome similarity matrix for them 
+#and make count file to have  15700 Transcripts 
+
+count_norm_b=count_norm_ordered[(count_norm_ordered$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
+dim(count_norm_b)
+#15700 133 (These are are in both file)
+
+# removing row.names
+count_norm_b=data.frame(count_norm_b, row.names=NULL)
 #15700 133
 
 
@@ -366,6 +353,25 @@ sub_count_norm=sub_count_norm[, c(1,10:141)]
 #st_count_e[1,]
 
 
+
+# we need as.character to be able to sort the data 
+typeof(count_fold_change$Transcript_ID)
+l=as.character(count_fold_change$Transcript_ID)
+count_fold_change['Transcript_ID']=l
+
+#sorting the data by ID
+count_fold_change_ordered=count_fold_change[order(count_fold_change$Transcript_ID),]
+
+
+#We want to exclude those 235 transcripts that are excluded from refflat file because of error creation and we donot have genome similarity matrix for them 
+#and make count file to have  15700 Transcripts 
+
+count_fc=count_fold_change_ordered[(count_fold_change_ordered$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
+###count_fold_change=data.frame(count_fold_change, row.names=NULL)
+dim (count_fc)
+#15700 67  (These are are in both file, genome and count_fc)
+
+count_fc=data.frame(count_fc, row.names=NULL)
 ########################################################################################################################################
 #Running forloop to create genome similarity matrix and count diff matrix and fit linear model between two triangle matrix
 ########################################################################################################################################
@@ -463,56 +469,83 @@ ref_alt_genome_b$alt
 #count and fold change 
 ###########
 #subseting a transcript
-sub_sub_count_norm=data.frame(subset(sub_count_norm, sub_count_norm$Transcript_ID==sub_count_norm[t,1]), row.names=NULL)
+sub_count_norm_b=data.frame(subset(count_norm_b, count_norm_b$Transcript_ID==count_norm_b[t,1]), row.names=NULL)
+#1 133
+
 #keeping the count columns to further calculation 132 columns
-sub_sub_count_norm=sub_sub_count_norm[ ,c(2:133)]
+sub_count_norm_b=sub_count_norm_b[ ,c(2:133)]
+#1 132
+
 #calculate mean ,sd, mean+2sd and mean-2sd per row for each transcript
-mean=rowMeans ( sub_sub_count_norm, na.rm=TRUE)
-sd=rowSds(sub_sub_count_norm, na.rm=TRUE)
-x=mean-(2*sd)
-y=mean+(2*sd)
+#mean=rowMeans ( sub_count_norm_b, na.rm=TRUE)
+#sd=rowSds(sub_count_norm_b, na.rm=TRUE)
+#x=mean-(2*sd)
+#y=mean+(2*sd)
+
 #excluding outliers
 #values above man+2sd and below mean_2sd changes to NA
-sub_sub_count_norm[sub_sub_count_norm<x]<-NA
-sub_sub_count_norm[sub_sub_count_norm>y]<-NA
+#sub_count_norm_b[sub_count_norm_b<x]<-NA
+#sub_count_norm_b[sub_count_norm_b>y]<-NA
 #ci=(ni-mean)/sd
-sub_sub_count_norm<- (sub_sub_count_norm-mean)/sd
+#sub_count_norm_b<- (sub_count_norm_b-mean)/sd
 
-sub_sub_count_norm_b=sub_sub_count_norm
-#We want to create foldchange from count data
+sub_count_norm_c=sub_count_norm_b
+
+#We want to create foldchange from count data and then remove outliers and do z normalization
+
 for (j in seq(1, 131, 2)) {
-sub_sub_count_norm_b$col= sub_sub_count_norm_b[1,j]/sub_sub_count_norm_b[1,j+1]
-names(sub_sub_count_norm_b)[names(sub_sub_count_norm_b)=="col"]<-paste("fc",names(sub_sub_count_norm_b)[j], sep="_")
+  sub_count_norm_c$col= sub_count_norm_c[1,j]/sub_count_norm_c[1,j+1]
+names(sub_count_norm_c)[names(sub_count_norm_c)=="col"]<-paste("fc",names(sub_count_norm_c)[j], sep="_")
 }
 
-names(  sub_sub_count_norm_b)
-head( sub_sub_count_norm_b)
+names( sub_count_norm_c)
+head( sub_count_norm_c)
 
-#lkeep only fc columns
-sub_sub_count_norm_fc=sub_sub_count_norm_b[,133:198]
+#keep only fc columns
+sub_count_norm_me_fc=sub_count_norm_c[,133:198]
+dim(sub_count_norm_me_fc)
 #1 66
 
-#In this fold change we have divided value 1/ value2 from DegSeq output which is hap1/hap0 from express file
+mean=rowMeans(sub_count_norm_me_fc, na.rm=TRUE)
+sd=rowSds(sub_count_norm_me_fc, na.rm=TRUE)
+x=mean-(2*sd)
+y=mean+(2*sd)
+#In this fold change we have divided value 1/ value2 from DegSeq output which is hap1/hap0 from express file  value 1=allele1 value2=allele0 in my code
+
+sub_count_norm_me_fc[sub_count_norm_me_fc<x]<-NA
+sub_count_norm_me_fc[sub_count_norm_me_fc>y]<-NA
+#ci=(ni-mean)/sd
+sub_count_norm_me_fc_znorm<- (sub_count_norm_me_fc-mean)/sd
+
+
+
+
+
+
 
 #########
 #fold change from Degseq output
 #########
 
-sub_count_fold_change=data.frame(subset(count_fold_change, count_fold_change$Transcript_ID==count_fold_change[t,1]), row.names=NULL)
-sub_count_fold_change=sub_count_fold_change[ ,c(2:67)]
-mean=rowMeans (sub_count_fold_change , na.rm=TRUE)
-sd=rowSds(sub_count_fold_change, na.rm=TRUE)
+sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[t,1]), row.names=NULL)
+# 1 67
+sub_count_fc=sub_count_fc[ ,c(2:67)]
+# 1 66
+mean=rowMeans (sub_count_fc , na.rm=TRUE)
+sd=rowSds(sub_count_fc, na.rm=TRUE)
 x=mean-(2*sd)
 y=mean+(2*sd)
 #excluding outliers
 #values above man+2sd and below mean_2sd changes to NA
-sub_count_fold_change[sub_count_fold_change<x]<-NA
-sub_count_fold_change[sub_count_fold_change>y]<-NA
+sub_count_fc[sub_count_fc<x]<-NA
+sub_count_fc[sub_count_fc>y]<-NA
 
+dim(sub_count_fc)
+#1 66
 #ci=(ni-mean)/sd
 #sub_count_fold_change<- (sub_count_fold_change-mean)/sd
 
 ################################################
-sub_count_fold_change
-sub_sub_count_norm_fc
+sub_count_fc
+sub_count_norm_me_fc_znorm
 
