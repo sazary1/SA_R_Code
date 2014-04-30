@@ -4,7 +4,7 @@
 setwd("/Users/saeedehazary/Documents/RNAseq/src")
 
 ####################################################################
-#Files you need to read in to run this script
+#Files you need to read in 
 ####################################################################
 #Derhap_CEU_ID.txt
 #DEGSeq outputs for all the individuals (we get this from eXpress)
