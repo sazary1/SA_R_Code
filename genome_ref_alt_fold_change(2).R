@@ -71,7 +71,7 @@ count_ordered=count[order(count$Transcript_ID),]
 #We want to exclude those 235 transcripts that are excluded from refflat file because of error creation and we donot have genome similarity matrix for them 
 #and make count file to have  15700 Transcripts 
 
-###count=count[(count$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
+count_b=count_ordered[(count_ordered$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
 ###count=data.frame(count, row.names=NULL)
 #15700 133 (These are are in both file)
 
@@ -108,6 +108,7 @@ for(j in list2$ID ) {
     count_fold_change<- merge(count_fold_change,b,  by="Transcript_name", all=TRUE)
   }
 }
+
 colnames(count_fold_change)[1]="Transcript_ID"
 
 # we need as.character to be able to sort the data 
@@ -122,7 +123,7 @@ count_fold_change_ordered=count_fold_change[order(count_fold_change$Transcript_I
 #We want to exclude those 235 transcripts that are excluded from refflat file because of error creation and we donot have genome similarity matrix for them 
 #and make count file to have  15700 Transcripts 
 
-###count_fold_change=count_fold_change[(count_fold_change$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
+count_fc=count_fold_change_ordered[(count_fold_change_ordered$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
 ###count_fold_change=data.frame(count_fold_change, row.names=NULL)
 #15700 (These are are in both file)
 
