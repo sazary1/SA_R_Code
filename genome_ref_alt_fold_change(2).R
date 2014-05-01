@@ -355,11 +355,13 @@ count_norm_b=data.frame(count_norm_b, row.names=NULL)
 
 
 # we need as.character to be able to sort the data 
+
 typeof(count_fold_change$Transcript_ID)
 l=as.character(count_fold_change$Transcript_ID)
 count_fold_change['Transcript_ID']=l
 
 #sorting the data by ID
+
 count_fold_change_ordered=count_fold_change[order(count_fold_change$Transcript_ID),]
 
 
@@ -368,12 +370,19 @@ count_fold_change_ordered=count_fold_change[order(count_fold_change$Transcript_I
 
 count_fc=count_fold_change_ordered[(count_fold_change_ordered$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
 ###count_fold_change=data.frame(count_fold_change, row.names=NULL)
+
 dim (count_fc)
 #15700 67  (These are are in both file, genome and count_fc)
 
 count_fc=data.frame(count_fc, row.names=NULL)
 ########################################################################################################################################
-#Running forloop to create genome similarity matrix and count diff matrix and fit linear model between two triangle matrix
+#Running forloop to create a genome data frame in which we compare alleles intrapersonal and create codes as
+# 0 : both alleles have refrence snp
+# 1 : allele hap0 has refrence snp and allele hap1 has alternative snp
+# 2 : allele hap1 has refrence snp and allele hap0 has refrence snp
+# 3 : both alleles have alternative snps
+
+
 ########################################################################################################################################
 #for (t in 1:nrow(refFlat.new_nodup_c))
 
@@ -431,13 +440,15 @@ for (t in 1:1000) {
       
       ref_alt_genome=merge (ref_alt_allchr_consensus_CEU, genome_split, by="rsID", all.genome_split=all)
       
-     #We need names to create the column name for our new columns later in line 414 
+     #We need names (which includes 66 names of CEU ID individuals) to create the column name for our new columns later in line 462
+     
      names= names(ref_alt_genome)[seq(4, 134, 2)]
      names= names(gg)[seq(4, 134, 2)]
-     #66 names of individuals
-     
+   
      
      ref_alt_genome_b=ref_alt_genome
+     
+#for loop for creating 0,1,2,4 codes for intrapersonal alleles comparision
 
 for (j in seq(4, 134, 2)) {
   
@@ -456,23 +467,28 @@ for (j in seq(4, 134, 2)) {
 colnames(ref_alt_genome_b)[136:201]= paste("code", names, sep="_")
 head(ref_alt_genome_b)
 
-#Random_checking
+#checking of the code above
 ref_alt_genome_b$code_NA12775_A.NA12775_B
 ref_alt_genome_b$NA12775_A.NA12775_B
 ref_alt_genome_b$NA12775_A.NA12775_B.1
 ref_alt_genome_b$ref
 ref_alt_genome_b$alt
 
+#Substing data set to keep snp ID and new columns 
 
+ref_alt_genome_c=ref_alt_genome_b[,c(1, 136:201)]
 
-###########
-#count and fold change 
-###########
+############################################
+#count and fold change (computing fc )
+#############################################
+
 #subseting a transcript
+
 sub_count_norm_b=data.frame(subset(count_norm_b, count_norm_b$Transcript_ID==count_norm_b[t,1]), row.names=NULL)
 #1 133
 
 #keeping the count columns to further calculation 132 columns
+
 sub_count_norm_b=sub_count_norm_b[ ,c(2:133)]
 #1 132
 
@@ -518,14 +534,9 @@ sub_count_norm_me_fc[sub_count_norm_me_fc>y]<-NA
 sub_count_norm_me_fc_znorm<- (sub_count_norm_me_fc-mean)/sd
 
 
-
-
-
-
-
-#########
-#fold change from Degseq output
-#########
+#####################################################
+#fold change from Degseq output and removing outliers
+#####################################################
 
 sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[t,1]), row.names=NULL)
 # 1 67
@@ -546,6 +557,72 @@ dim(sub_count_fc)
 #sub_count_fold_change<- (sub_count_fold_change-mean)/sd
 
 ################################################
+
+#these are the data that we need to use
 sub_count_fc
 sub_count_norm_me_fc_znorm
-uu=log(sub_count_norm_me_fc_znorm, base=2), na.rm=TRUE
+ref_alt_genome_c
+################################################
+
+#Transposing genome data set to use snps as predictor in linear model
+
+t_ref_alt_genome_c=as.data.frame(t(ref_alt_genome_c))
+t_ref_alt_genome_c$rsID=factor(row.names(t_ref_alt_genome_c))
+t_ref_alt_genome_c= data.frame(lapply(t_ref_alt_genome_c, as.character), stringsAsFactors=FALSE)
+colnames(t_ref_alt_genome_c)=t_ref_alt_genome_c[1,]
+t_ref_alt_genome_c=t_ref_alt_genome_c[-1,]
+t_ref_alt_genome_c=t_ref_alt_genome_c[, c(132,1:131)]
+colnames(t_ref_alt_genome_c)[1]="ID"
+cc=as.character(list2$ID)
+list2["ID"]=cc
+t_ref_alt_genome_c$fc="NA"
+typeof(list2$ID)
+
+#adding the counts to transposed genome ,  predictors (snps) and dependent variable (fc) in one data
+
+for (p in list2$ID){
+a=which(t_ref_alt_genome_c$ID==sprintf("code_%s_A.%s_B", p, p) )
+print(a)
+b=which(colnames(sub_count_fc)==sprintf("%s_log2.Fold_change", p) )
+print(b)
+t_ref_alt_genome_c$fc[a]=sub_count_fc[,b]
+}
+head(t_ref_alt_genome_c)
+
+
+# saving the number of columns in data set before creating dummy variables
+
+s=ncol(t_ref_alt_genome_c)
+s
+head(t_ref_alt_genome_c)
+
+
+#changing the order of column : col1 is ID , col2 is fold change and col3 to end is snps 
+t_ref_alt_genome_d=t_ref_alt_genome_c[, c(1, ncol(t_ref_alt_genome_c), 2:(ncol(t_ref_alt_genome_c)-1))]
+head(t_ref_alt_genome_d)
+
+
+
+#creating dummy variables for predictors (snps)  
+
+for (l in colnames(t_ref_alt_genome_d)[3:ncol(t_ref_alt_genome_d)]) {
+  t=which(colnames(t_ref_alt_genome_d)==sprintf("%s", l))
+  print(l)
+  t_ref_alt_genome_d<- within(t_ref_alt_genome_d, new1<-ifelse(t_ref_alt_genome_d[,t]=="1", 1, 0))
+  t_ref_alt_genome_d<- within(t_ref_alt_genome_d, new2 <-ifelse(t_ref_alt_genome_d[,t]=="2", 1, 0))
+  t_ref_alt_genome_d<- within(t_ref_alt_genome_d, new3 <-ifelse(t_ref_alt_genome_d[,t]=="3", 1, 0))
+  names(t_ref_alt_genome_d)[names(t_ref_alt_genome_d)=='new1']<-sprintf("%s_1", l)
+  names(t_ref_alt_genome_d)[names(t_ref_alt_genome_d)=='new2']<-sprintf("%s_2", l)
+  names(t_ref_alt_genome_d)[names(t_ref_alt_genome_d)=='new3']<-sprintf("%s_3", l)
+}
+
+head(t_ref_alt_genome_d)
+
+#subseting data : keeping variables "ID" , "FC"  "dummy variables of snps"
+t_ref_alt_genome_e=t_ref_alt_genome_d [, c(1, 2, (s+1):ncol(t_ref_alt_genome_d))]
+head(t_ref_alt_genome_e)
+
+#runnig linear mode
+
+model_fit=lm(t_ref_alt_genome_e[,2] ~ t_ref_alt_genome_e[, 3:ncol(t_ref_alt_genome_e)] )
+
