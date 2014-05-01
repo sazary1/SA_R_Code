@@ -428,7 +428,7 @@ for (t in 1:1000) {
         k_char_split= data.frame(k_char_split,b)
         
       }
-      
+    }
       
       ID_66=read.table("ID_66.txt" , header=F, sep="\t")
       myvars <- names(k_char_split) %in% ID_66$V1 
@@ -542,14 +542,14 @@ sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[t,1]),
 # 1 67
 sub_count_fc=sub_count_fc[ ,c(2:67)]
 # 1 66
-mean=rowMeans (sub_count_fc , na.rm=TRUE)
-sd=rowSds(sub_count_fc, na.rm=TRUE)
-x=mean-(2*sd)
-y=mean+(2*sd)
+#   mean=rowMeans (sub_count_fc , na.rm=TRUE)
+#   sd=rowSds(sub_count_fc, na.rm=TRUE)
+#   x=mean-(2*sd)
+#   y=mean+(2*sd)
 #excluding outliers
 #values above man+2sd and below mean_2sd changes to NA
-sub_count_fc[sub_count_fc<x]<-NA
-sub_count_fc[sub_count_fc>y]<-NA
+#   sub_count_fc[sub_count_fc<x]<-NA
+#   sub_count_fc[sub_count_fc>y]<-NA
 
 dim(sub_count_fc)
 #1 66
@@ -562,17 +562,28 @@ dim(sub_count_fc)
 sub_count_fc
 sub_count_norm_me_fc_znorm
 ref_alt_genome_c
+head(t_ref_alt_genome_c)
 ################################################
 
 #Transposing genome data set to use snps as predictor in linear model
-
+ #Transpose the data
 t_ref_alt_genome_c=as.data.frame(t(ref_alt_genome_c))
+#Keeping the rownames as new column
 t_ref_alt_genome_c$rsID=factor(row.names(t_ref_alt_genome_c))
+#as.character
 t_ref_alt_genome_c= data.frame(lapply(t_ref_alt_genome_c, as.character), stringsAsFactors=FALSE)
+#duplicating first row to colnames
 colnames(t_ref_alt_genome_c)=t_ref_alt_genome_c[1,]
+#deleting first row
 t_ref_alt_genome_c=t_ref_alt_genome_c[-1,]
-t_ref_alt_genome_c=t_ref_alt_genome_c[, c(132,1:131)]
+#removing individual IDs to first column
+col_1=ncol(t_ref_alt_genome_c)-1
+col_1
+t_ref_alt_genome_c=t_ref_alt_genome_c[, c(ncol(t_ref_alt_genome_c),1:col_1)]
+#changing rsID to ID
 colnames(t_ref_alt_genome_c)[1]="ID"
+
+#as.character
 cc=as.character(list2$ID)
 list2["ID"]=cc
 t_ref_alt_genome_c$fc="NA"
@@ -582,12 +593,14 @@ typeof(list2$ID)
 
 for (p in list2$ID){
 a=which(t_ref_alt_genome_c$ID==sprintf("code_%s_A.%s_B", p, p) )
+a
 print(a)
 b=which(colnames(sub_count_fc)==sprintf("%s_log2.Fold_change", p) )
 print(b)
 t_ref_alt_genome_c$fc[a]=sub_count_fc[,b]
 }
 head(t_ref_alt_genome_c)
+#fc added to the end of data frame
 
 
 # saving the number of columns in data set before creating dummy variables
@@ -622,7 +635,23 @@ head(t_ref_alt_genome_d)
 t_ref_alt_genome_e=t_ref_alt_genome_d [, c(1, 2, (s+1):ncol(t_ref_alt_genome_d))]
 head(t_ref_alt_genome_e)
 
+#removing column ID
+t_ref_alt_genome_f=t_ref_alt_genome_e[,2:ncol(t_ref_alt_genome_e)]
+head(t_ref_alt_genome_f)
+
+
 #runnig linear mode
 
-model_fit=lm(t_ref_alt_genome_e[,2] ~ t_ref_alt_genome_e[, 3:ncol(t_ref_alt_genome_e)] )
+#this one is not working:  model_fit=lm(t_ref_alt_genome_e[,2] ~ t_ref_alt_genome_e[, 3:ncol(t_ref_alt_genome_e)] )
+
+model_fit=lm(t_ref_alt_genome_e$fc ~ ., data=t_ref_alt_genome_f )
+summary(model_fit) 
+
+install.packages("glmnet")
+library(glmnet)
+
+fit.glm=glmnet( t_ref_alt_genome_e[, 2:ncol(t_ref_alt_genome_e)] , t_ref_alt_genome_e$fc, family="multinomial" )
+
+
+
 
