@@ -1,10 +1,7 @@
-###################################################################
-#SA
-##################################################################
 setwd("/Users/saeedehazary/Documents/RNAseq/src")
 
 ####################################################################
-#Files you need to read in 
+#Files you need to read in to run this script
 ####################################################################
 #Derhap_CEU_ID.txt
 #DEGSeq outputs for all the individuals (we get this from eXpress)
@@ -52,49 +49,14 @@ for(j in list2$ID ) {
 }
 dim(count)
 #15935 133
-
 colnames(count)[1]="Transcript_ID"
 
-
-
-###########################count_fold_change#############################################################
-##########################Reading allele counts for all transcripts in 66 CEU population############################
-
-#Creating list of CEU IDs
-
-list2=read.table("/Users/saeedehazary/Documents/trio/Derhap_CEU_ID.txt", sep="\t", header=F)
-list2
-colnames(list2)[1]="ID"
-
-
-#Reading the Degseq out puts for each individuals in CEU population
-
-for(j in list2$ID ) { 
-  if (j=="NA06985"){
-    a= sprintf("Der_%s_CEU/Degseq_from_bowtie/output_score.txt", j) 
-    b=read.table(a, header=T, sep="\t" )
-    colnames(b) [1]="Transcript_name"
-    #colnames(b) [2]=sprintf("%s_allele1_counts",j)
-    #colnames(b) [3]=sprintf("%s_allele0_counts",j)
-    colnames(b) [4]=sprintf("%s_log2.Fold_change",j)
-    count_fold_change=b[ ,c(1,4)]
-  } else{
-    a= sprintf("Der_%s_CEU/Degseq_from_bowtie/output_score.txt", j) 
-    b=read.table(a, header=T, sep="\t" )
-    colnames(b) [1]="Transcript_name"
-    #colnames(b) [2]=sprintf("%s_allele1_counts",j)
-    #colnames(b) [3]=sprintf("%s_allele0_counts",j)
-    colnames(b) [4]=sprintf("%s_log2.Fold_change",j)
-    b=b[ ,c(1,4)]
-    
-    count_fold_change<- merge(count_fold_change,b,  by="Transcript_name", all=TRUE)
-  }
-}
-
-colnames(count_fold_change)[1]="Transcript_ID"
+#count_all<- merge(count,list, all.count=TRUE, by="Transcript_name")
+#colnames(data_frame_all)[200:289]="snp"
+#names(data_frame_all)
 
 ###########################################################################################################
-#Normalizing the count data
+                                       #Normalizing the count data
 ###########################################################################################################
 #Rahul_SA
 
@@ -272,18 +234,12 @@ k=data.frame(sub ('_', '', refFlat.new_nodup_b$Transcript_ID))
 refFlat.new_nodup_b=cbind(k, refFlat.new_nodup_b)
 colnames(refFlat.new_nodup_b)[3]="T_ID"
 colnames(refFlat.new_nodup_b)[1]="Transcript_ID"
-refFlat.new_nodup_b
-#43070 9
 
 #only those TRanscript_IDs in refFlat file that we have data for that in count
-###refFlat.new_nodup_c <- data.frame(subset(refFlat.new_nodup_b, refFlat.new_nodup_b$Transcript_ID %in% count_norm$Transcript_id))
+
 refFlat.new_nodup_c=merge(refFlat.new_nodup_b, count, by="Transcript_ID", all.count=all)
-dim(refFlat.new_nodup_c)
-
-
 #15700 141
 
-refFlat.new_nodup_c=refFlat.new_nodup_c[order(refFlat.new_nodup_c$Transcript_ID),]
 
 #checking
 y=count_norm$Transcript_ID[(count_norm$Transcript_ID %in% refFlat.new_nodup_b$Transcript_ID)]
@@ -310,9 +266,27 @@ refFlat.new_nodup_c=refFlat.new_nodup_c[, c(142,2:141)]
 colnames(refFlat.new_nodup_c) [1]="Transcript_ID"
 typeof(refFlat.new_nodup_c$Transcript_ID)
 
-grep ('NM000017', count$Transcript_ID)
-
 #############################################################################################################
+
+
+#sub_count_norm=merge(refFlat.new_nodup_b,count_norm, by="Transcript_ID", all.count_norm=all)
+
+#we do not need column2:9
+#sub_count_norm=sub_count_norm[, c(1,10:141)]
+#15700 133
+
+
+
+#checking to make sure sure merging went well
+#grep("NM000017", st_count_d$Transcript_ID)
+#st_count_d[13367, ]
+
+#grep("NM000017", count$Transcript_name)
+#count[13367, ]
+#st_count[13367,]
+
+#grep("NM000017", st_count_e$Transcript_ID)
+#st_count_e[1,]
 
 
 #checking
@@ -337,41 +311,10 @@ dim(count_norm_b)
 
 # removing row.names
 count_norm_b=data.frame(count_norm_b, row.names=NULL)
+dim(count_norm_b)
 #15700 133
 
 
-
-#checking to make sure sure merging went well
-#grep("NM000017", st_count_d$Transcript_ID)
-#st_count_d[13367, ]
-
-#grep("NM000017", count$Transcript_name)
-#count[13367, ]
-#st_count[13367,]
-
-#grep("NM000017", st_count_e$Transcript_ID)
-#st_count_e[1,]
-
-
-
-# we need as.character to be able to sort the data 
-typeof(count_fold_change$Transcript_ID)
-l=as.character(count_fold_change$Transcript_ID)
-count_fold_change['Transcript_ID']=l
-
-#sorting the data by ID
-count_fold_change_ordered=count_fold_change[order(count_fold_change$Transcript_ID),]
-
-
-#We want to exclude those 235 transcripts that are excluded from refflat file because of error creation and we donot have genome similarity matrix for them 
-#and make count file to have  15700 Transcripts 
-
-count_fc=count_fold_change_ordered[(count_fold_change_ordered$Transcript_ID %in% refFlat.new_nodup_c$Transcript_ID), ]
-###count_fold_change=data.frame(count_fold_change, row.names=NULL)
-dim (count_fc)
-#15700 67  (These are are in both file, genome and count_fc)
-
-count_fc=data.frame(count_fc, row.names=NULL)
 ########################################################################################################################################
 #Running forloop to create genome similarity matrix and count diff matrix and fit linear model between two triangle matrix
 ########################################################################################################################################
@@ -425,97 +368,147 @@ for (t in 1:1000) {
       myvars <- names(k_char_split) %in% ID_66$V1 
       k_char_split=k_char_split[myvars]
       #132 columns
-      
-      genome_split=cbind(k$rsID, k_char_split)
-      colnames(genome_split)[1]="rsID"
-      
-      ref_alt_genome=merge (ref_alt_allchr_consensus_CEU, genome_split, by="rsID", all.genome_split=all)
-      
-     #We need names to create the column name for our new columns later in line 414 
-     names= names(ref_alt_genome)[seq(4, 134, 2)]
-     names= names(gg)[seq(4, 134, 2)]
-     #66 names of individuals
-     
-     
-     ref_alt_genome_b=ref_alt_genome
-
-for (j in seq(4, 134, 2)) {
-  
-  for (i in 1: nrow(ref_alt_genome)) {
-    
-      if      (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,2]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,2])) {ref_alt_genome_b$g_b[i]=0}  #ref is in column 2
-      else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,2]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,3])) {ref_alt_genome_b$g_b[i]=1}
-      else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,3]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,2])) {ref_alt_genome_b$g_b[i]=2}
-      else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,3]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,3])) {ref_alt_genome_b$g_b[i]=3}
-      else {ref_alt_genome_b$g_b[i]="NA"}
-      
     }
-  names(ref_alt_genome_b)[names(ref_alt_genome_b)=='g_b']<-sprintf("compare%d", j)
+    
+    # if (t==394) {
+    #   next
+    #}
+    # else{
+    
+    genome=matrix(data=NA, nrow=132, ncol=132, byrow=TRUE)
+    for (i in 1:132){
+      
+      for( j in 1:132) {
+        
+        
+        a=sum(k_char_split[,i]==k_char_split[,j])/nrow(k_char_split)
+        genome [i, j]=a
+        
+      }
+    }
+    
+    genome_triangle=upperTriangle(genome, diag=FALSE)
+    #s=assign(sprintf("genome_%s_250", refFlat.new_nodup_c[t,1]), upperTriangle(genome, diag=FALSE))
+    #save(s, file=sprintf("/Users/saeedehazary/Documents/R_files/permanent_files/genome_%s_250", refFlat.new_nodup_c[t,1]))
+    
+    
+    
+    #subseting a transcript
+    sub_count_norm_b=data.frame(subset(count_norm_b, count_norm_b$Transcript_ID==count_norm_b[t,1]), row.names=NULL)
+    #keeping the count columns to further calculation 132 columns
+    sub_count_norm_b=sub_count_norm_b[ ,c(2:133)]
+    #calculate mean ,sd, mean+2sd and mean-2sd per row for each transcript
+    mean=rowMeans ( sub_count_norm_b, na.rm=TRUE)
+    sd=rowSds(sub_count_norm_b, na.rm=TRUE)
+    x=mean-(2*sd)
+    y=mean+(2*sd)
+    #excluding outliers
+    #values above man+2sd and below mean_2sd changes to NA
+    sub_count_norm_b[sub_count_norm_b<x]<-NA
+    sub_count_norm_b[sub_count_norm_b>y]<-NA
+    #ci=(ni-mean)/sd
+    sub_count_norm_b<- (sub_count_norm_b-mean)/sd
+    
+    
+    
+    #Creating count matrix
+    count_matrix=matrix(data=NA, nrow=132, ncol=132, byrow=TRUE)
+    for (i in 1:132)
+    {
+      
+      for( j in 1:132)  
+      {
+        #|ci-c2| #pairwise comparison of ci
+        a=abs(sub_count_norm_b[i]-sub_count_norm_b[j])
+        count_matrix [i, j]=as.numeric(a)
+        #132 132
+      }
+    }
+    
+    
+    count_triangle=upperTriangle(count_matrix, diag=FALSE)
+    
+    
+    #Some of the count matrics have no data and all are NA and they create an error
+    if (sum(is.na(count_triangle))=="8646") { 
+      
+      next}
+    
+    else{
+      
+      
+      if (t==1) {
+        fit= lm (genome_triangle ~ count_triangle)
+        rsquared <- summary(fit)$r.squared
+        P_value<- summary(fit)$coefficients[2,4]
+        t_value<-summary(fit)$coefficients[2,3]
+        Beta<- summary(fit)$coefficients[2,1]
+        df<-fit$df.residual
+        Transcript_ID=refFlat.new_nodup_c[t,1]
+      } 
+      
+      else {
+        fit= lm (genome_triangle ~ count_triangle)
+        rsquared_b <- summary(fit)$r.squared
+        
+        
+        #skipping non entry outputs , since they create an error
+        if ( nrow(summary(fit)$coefficients)==1 ) 
+        {next
+        }
+        else {
+          
+          P_value_b<- summary(fit)$coefficients[2,4]
+          
+          Beta_b<- summary(fit)$coefficients[2,1]
+          df_b<-fit$df.residual  
+          t_value_b<-summary(fit)$coefficients[2,3]
+          t_value=c(t_value_b, t_value)
+          rsquared=c (rsquared, rsquared_b)
+          P_value= c (P_value_b, P_value)
+          Beta= c(Beta_b, Beta)
+          df= c(df_b, df)
+          Transcript_ID_b=refFlat.new_nodup_c[t,1]
+          Transcript_ID=c(Transcript_ID_b, Transcript_ID)
+          fit3_100bp_1_1000=data.frame(Transcript_ID, Beta,t_value,  P_value, rsquared, df )
+          
+          
+          ###############################################
+          #Checking the linear model assumptions
+          ###############################################
+          #install.packages("car")
+          #library(car)
+          #We are checking if the residuals are normally distributed
+          #qqPlot(fit)
+          #we rae checking if constant error variance holds
+          
+          #library(car) 
+          #ncvTest(fit)
+          #spreadLevelPlot(fit)
+          
+          #############################################
+          
+          
+          #capture.output(u, file=sprintf("/Users/saeedehazary/Documents/R_files/fit_250/%s_fit", refFlat.new_nodup_c[t,1]))
+          
+          
+          
+          print(t)
+          
+          #Data Control
+          #if (refFlat.new_nodup_c[t,1]!=st_count_e[t,1]) { 
+          #print("There is an Error in data")
+          #}
+          #else {
+          
+          # }
+          
+        }
+      }
+    }
   }
-
-colnames(ref_alt_genome_b)[136:201]= paste("code", names, sep="_")
-head(ref_alt_genome_b)
-
-#Random_checking
-ref_alt_genome_b$code_NA12775_A.NA12775_B
-ref_alt_genome_b$NA12775_A.NA12775_B
-ref_alt_genome_b$NA12775_A.NA12775_B.1
-ref_alt_genome_b$ref
-ref_alt_genome_b$alt
-
-
-
-###########
-#count and fold change 
-###########
-#subseting a transcript
-sub_count_norm_b=data.frame(subset(count_norm_b, count_norm_b$Transcript_ID==count_norm_b[t,1]), row.names=NULL)
-#1 133
-
-#keeping the count columns to further calculation 132 columns
-sub_count_norm_b=sub_count_norm_b[ ,c(2:133)]
-#1 132
-
-#calculate mean ,sd, mean+2sd and mean-2sd per row for each transcript
-#mean=rowMeans ( sub_count_norm_b, na.rm=TRUE)
-#sd=rowSds(sub_count_norm_b, na.rm=TRUE)
-#x=mean-(2*sd)
-#y=mean+(2*sd)
-
-#excluding outliers
-#values above man+2sd and below mean_2sd changes to NA
-#sub_count_norm_b[sub_count_norm_b<x]<-NA
-#sub_count_norm_b[sub_count_norm_b>y]<-NA
-#ci=(ni-mean)/sd
-#sub_count_norm_b<- (sub_count_norm_b-mean)/sd
-
-sub_count_norm_c=sub_count_norm_b
-
-#We want to create foldchange from count data and then remove outliers and do z normalization
-
-for (j in seq(1, 131, 2)) {
-  sub_count_norm_c$col= sub_count_norm_c[1,j]/sub_count_norm_c[1,j+1]
-names(sub_count_norm_c)[names(sub_count_norm_c)=="col"]<-paste("fc",names(sub_count_norm_c)[j], sep="_")
 }
 
-names( sub_count_norm_c)
-head( sub_count_norm_c)
-
-#keep only fc columns
-sub_count_norm_me_fc=sub_count_norm_c[,133:198]
-dim(sub_count_norm_me_fc)
-#1 66
-
-mean=rowMeans(sub_count_norm_me_fc, na.rm=TRUE)
-sd=rowSds(sub_count_norm_me_fc, na.rm=TRUE)
-x=mean-(2*sd)
-y=mean+(2*sd)
-#In this fold change we have divided value 1/ value2 from DegSeq output which is hap1/hap0 from express file  value 1=allele1 value2=allele0 in my code
-
-sub_count_norm_me_fc[sub_count_norm_me_fc<x]<-NA
-sub_count_norm_me_fc[sub_count_norm_me_fc>y]<-NA
-#ci=(ni-mean)/sd
-sub_count_norm_me_fc_znorm<- (sub_count_norm_me_fc-mean)/sd
 
 
 
@@ -523,29 +516,11 @@ sub_count_norm_me_fc_znorm<- (sub_count_norm_me_fc-mean)/sd
 
 
 
-#########
-#fold change from Degseq output
-#########
 
-sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[t,1]), row.names=NULL)
-# 1 67
-sub_count_fc=sub_count_fc[ ,c(2:67)]
-# 1 66
-mean=rowMeans (sub_count_fc , na.rm=TRUE)
-sd=rowSds(sub_count_fc, na.rm=TRUE)
-x=mean-(2*sd)
-y=mean+(2*sd)
-#excluding outliers
-#values above man+2sd and below mean_2sd changes to NA
-sub_count_fc[sub_count_fc<x]<-NA
-sub_count_fc[sub_count_fc>y]<-NA
+write.table(fit_new_edgeR_250bp_1_1000, file="/Users/saeedehazary/Documents/R_files/fit_250/fit_new_edgeR_250bp_1_1000.txt", sep="\t", row.names=F)
 
-dim(sub_count_fc)
-#1 66
-#ci=(ni-mean)/sd
-#sub_count_fold_change<- (sub_count_fold_change-mean)/sd
 
-################################################
-sub_count_fc
-sub_count_norm_me_fc_znorm
-uu=log(sub_count_norm_me_fc_znorm, base=2), na.rm=TRUE
+
+
+
+
