@@ -612,7 +612,7 @@ head(t_ref_alt_genome_c)
 
 #changing the order of column : col1 is ID , col2 is fold change and col3 to end is snps 
 t_ref_alt_genome_d=t_ref_alt_genome_c[, c(1, ncol(t_ref_alt_genome_c), 2:(ncol(t_ref_alt_genome_c)-1))]
-head(t_ref_alt_genome_d)
+head(t_ref_alt_genome_c)
 
 
 
@@ -632,10 +632,11 @@ for (l in colnames(t_ref_alt_genome_d)[3:ncol(t_ref_alt_genome_d)]) {
 head(t_ref_alt_genome_d)
 
 #subseting data : keeping variables "ID" , "FC"  "dummy variables of snps"
+
 t_ref_alt_genome_e=t_ref_alt_genome_d [, c(1, 2, (s+1):ncol(t_ref_alt_genome_d))]
 head(t_ref_alt_genome_e)
 
-#removing column ID
+#removing column ID to be able to use . as predictor in lm
 t_ref_alt_genome_f=t_ref_alt_genome_e[,2:ncol(t_ref_alt_genome_e)]
 head(t_ref_alt_genome_f)
 
@@ -644,14 +645,49 @@ head(t_ref_alt_genome_f)
 
 #this one is not working:  model_fit=lm(t_ref_alt_genome_e[,2] ~ t_ref_alt_genome_e[, 3:ncol(t_ref_alt_genome_e)] )
 
-model_fit=lm(t_ref_alt_genome_e$fc ~ ., data=t_ref_alt_genome_f )
+# keeping the rows that has fc 
+
+t_ref_alt_genome_g=t_ref_alt_genome_f[!is.na(t_ref_alt_genome_f$fc),]
+head(t_ref_alt_genome_g)
+
+
+model_fit=lm(t_ref_alt_genome_g$fc ~ ., data=t_ref_alt_genome_g )
 summary(model_fit) 
 
 install.packages("glmnet")
 library(glmnet)
 
-fit.glm=glmnet( t_ref_alt_genome_e[, 2:ncol(t_ref_alt_genome_e)] , t_ref_alt_genome_e$fc, family="multinomial" )
+fit.glm=glmnet( t_ref_alt_genome_e[, 2:ncol(t_ref_alt_genome_e)] , t_ref_alt_genome_e$fc, family="multinomial" ) 
+
+  
+
+#######new way for dummies
+head(t_ref_alt_genome_c)
+
+oo=ncol(t_ref_alt_genome_c)-1
+oo
+#removing column ID to be able to use . as predictor in lm
+check=t_ref_alt_genome_c[,c(ncol(t_ref_alt_genome_c), 2:oo)]
+head(check)
 
 
+#as.factor
+nms=c( 2:137)
+# not work :check[nms]= lapply(check[nms],as.factor)
+for (i in 2:ncol(check)){
+check[, i]= factor(check[,i])
+is.factor(check[,i])
+}
+is.factor(check[,6])
+check[,10]
+head(check)
+
+model_fit=lm(formula=check$fc ~ ., data=check )
 
 
+for (i in 2:ncol(check)){
+  check_b=within(check, {
+    a.ct<-C(check[,i], tratment)
+    print(attributes(a.ct))
+  })
+}
