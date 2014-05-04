@@ -228,7 +228,7 @@ refFlat.new=subset(refFlat.new_250, refFlat.new_250$chr!="chrX")
 refFlat.new=subset(refFlat.new_100, refFlat.new_100$chr!="chrX")
 #46181
 
-refFlat.new=subset(refFlat.new_50, refFlat.new_100$chr!="chrX")
+refFlat.new=subset(refFlat.new_50, refFlat.new_50$chr!="chrX")
 
 ######################################################################################################################
 
@@ -393,10 +393,35 @@ library(gdata)
 install.packages("dummies")
 library(dummies)
 
+
+
+#Excounting number of enries in count_fc data set
+count_fc_2=count_fc
+count_fc_2$row_counts = apply(count_fc_2,1,function(x) sum(!is.na(x[1:15700])))
+head(count_fc_2)
+
+#mean(count_fc_2$row_counts)
+sum(count_fc_2$row_counts>35)
+hist(count_fc_2$row_counts)
+#TID_678=count_fc_2$Transcript_ID[which(count_fc_2$row_counts>35)]
+#nrow(count_fc_2$Transcript_ID==TID_678)
+#nrow(count_fc_2[which(count_fc_2$row_counts>35)])
+#row.names(count_fc$Transcript_ID==TID_678)
+new_count=count_fc[which(count_fc_2$row_counts>35),]
+list_678=row.names(new_count)
+list_678
+
 #x1=runif (10, 1, 15700)
 #x2=runif (10, 1, 15700)
 #set.seed(10)
-for (t in 1:1000) {
+
+
+
+
+
+
+
+for (t in ) {
   print(t)
   #refFlat_a= subset(refFlat.new_nodup_b, refFlat.new_nodup_b$Transcript_ID==(x))
   refFlat_a= refFlat.new_nodup_c[t, ]
@@ -439,6 +464,9 @@ for (t in 1:1000) {
       
       genome_split=cbind(k$rsID, k_char_split)
       colnames(genome_split)[1]="rsID"
+    
+    #ref_alt_allchr_consensus_CEU=read.table("/Users/saeedehazary/Documents/RNASeq/src/ref_alt/ref_alt_allchr_consensus_CEU.txt", sep="\t", header=T)
+    
       
       ref_alt_genome=merge (ref_alt_allchr_consensus_CEU, genome_split, by="rsID", all.genome_split=all)
       
@@ -450,35 +478,251 @@ for (t in 1:1000) {
      
      ref_alt_genome_b=ref_alt_genome
      
-#for loop for creating 0,1,2,4 codes for intrapersonal alleles comparision
-
-for (j in seq(4, 134, 2)) {
-  
-  for (i in 1: nrow(ref_alt_genome)) {
     
-      if      (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,2]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,2])) {ref_alt_genome_b$g_b[i]=0}  #ref is in column 2
-      else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,2]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,3])) {ref_alt_genome_b$g_b[i]=1}
-      else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,3]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,2])) {ref_alt_genome_b$g_b[i]=2}
-      else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,3]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,3])) {ref_alt_genome_b$g_b[i]=3}
-      else {ref_alt_genome_b$g_b[i]="NA"}
+    
+    #for loop for creating 0,1,2,4 codes for intrapersonal alleles comparision
+    
+    for (j in seq(4, 134, 2)) {
       
+      for (i in 1: nrow(ref_alt_genome_b)) {
+        
+        if      (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,2]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,2])) {ref_alt_genome_b$g_b[i]=0}  #ref is in column 2
+        else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,2]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,3])) {ref_alt_genome_b$g_b[i]=1}
+        else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,3]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,2])) {ref_alt_genome_b$g_b[i]=2}
+        else if (as.character(ref_alt_genome_b[i,j])==as.character(ref_alt_genome_b[i,3]) && as.character(ref_alt_genome_b[i,j+1])==as.character(ref_alt_genome_b[i,3])) {ref_alt_genome_b$g_b[i]=3}
+        else {ref_alt_genome_b$g_b[i]="NA"}
+        
+      }
+      names(ref_alt_genome_b)[names(ref_alt_genome_b)=='g_b']<-sprintf("compare%d", j)
+      print(j)
     }
-  names(ref_alt_genome_b)[names(ref_alt_genome_b)=='g_b']<-sprintf("compare%d", j)
+    
+    colnames(ref_alt_genome_b)[136:201]= paste("code", names, sep="_")
+    head(ref_alt_genome_b)
+    
+    #checking of the code above
+    ref_alt_genome_b$code_NA12775_A.NA12775_B
+    ref_alt_genome_b$NA12775_A.NA12775_B
+    ref_alt_genome_b$NA12775_A.NA12775_B.1
+    ref_alt_genome_b$ref
+    ref_alt_genome_b$alt
+    
+    #Substing data set to keep snp ID and new columns 
+    
+    ref_alt_genome_c=ref_alt_genome_b[,c(1, 136:201)]
+
+#####################################################
+#fold change from Degseq output
+#####################################################
+
+sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[t,1]), row.names=NULL)
+# 1 67
+
+#we created thsese two filee
+#sub_count_fc
+#refFlat_a
+##############################
+ #checking the data set subset
+##############################
+if (sub_count_fc$Transcript_ID ==refFlat_a$Transcript_ID) {
+  print ("checked data subset: it is ok") }
+ 
+if (sub_count_fc$Transcript_ID !=refFlat_a$Transcript_ID) {
+  print ("Error:check data subset")
+stop
+}
+
+##############################
+
+sub_count_fc=sub_count_fc[ ,c(2:67)]
+# 1 66
+#   mean=rowMeans (sub_count_fc , na.rm=TRUE)
+#   sd=rowSds(sub_count_fc, na.rm=TRUE)
+#   x=mean-(2*sd)
+#   y=mean+(2*sd)
+#excluding outliers
+#values above man+2sd and below mean_2sd changes to NA
+#   sub_count_fc[sub_count_fc<x]<-NA
+#   sub_count_fc[sub_count_fc>y]<-NA
+
+dim(sub_count_fc)
+#1 66
+#ci=(ni-mean)/sd
+#sub_count_fold_change<- (sub_count_fold_change-mean)/sd
+
+################################################
+#these are the data that we need to use
+sub_count_fc
+sub_count_norm_me_fc_znorm
+ref_alt_genome_c
+head(t_ref_alt_genome_c)
+################################################
+
+#Transposing genome data set to use snps as predictor in linear model
+#Transpose the data
+t_ref_alt_genome_c=as.data.frame(t(ref_alt_genome_c))
+#Keeping the rownames as new column
+t_ref_alt_genome_c$rsID=factor(row.names(t_ref_alt_genome_c))
+#as.character
+t_ref_alt_genome_c= data.frame(lapply(t_ref_alt_genome_c, as.character), stringsAsFactors=FALSE)
+#duplicating first row to colnames
+colnames(t_ref_alt_genome_c)=t_ref_alt_genome_c[1,]
+#deleting first row
+t_ref_alt_genome_c=t_ref_alt_genome_c[-1,]
+#removing individual IDs to first column
+col_1=ncol(t_ref_alt_genome_c)-1
+col_1
+t_ref_alt_genome_c=t_ref_alt_genome_c[, c(ncol(t_ref_alt_genome_c),1:col_1)]
+#changing rsID to ID
+colnames(t_ref_alt_genome_c)[1]="ID"
+
+#as.character
+cc=as.character(list2$ID)
+list2["ID"]=cc
+t_ref_alt_genome_c$fc="NA"
+typeof(list2$ID)
+
+#adding the counts to transposed genome ,  predictors (snps) and dependent variable (fc) in one data
+
+for (p in list2$ID){
+  a=which(t_ref_alt_genome_c$ID==sprintf("code_%s_A.%s_B", p, p) )
+  a
+  print(a)
+  b=which(colnames(sub_count_fc)==sprintf("%s_log2.Fold_change", p) )
+  print(b)
+  t_ref_alt_genome_c$fc[a]=sub_count_fc[,b]
+}
+head(t_ref_alt_genome_c)
+#fc added to the end of data frame
+
+
+# saving the number of columns in data set before creating dummy variables
+
+s=ncol(t_ref_alt_genome_c)
+s
+head(t_ref_alt_genome_c)
+
+
+#changing the order of column : col1 is ID , col2 is fold change and col3 to end is snps 
+t_ref_alt_genome_d=t_ref_alt_genome_c[, c(1, ncol(t_ref_alt_genome_c), 2:(ncol(t_ref_alt_genome_c)-1))]
+head(t_ref_alt_genome_d)
+names(t_ref_alt_genome_d)
+
+#######creating dummies using dummies package
+
+t_ref_alt_genome_e=t_ref_alt_genome_d
+t_ref_alt_genome_f=t_ref_alt_genome_e[, 3:ncol(t_ref_alt_genome_e)]
+names(t_ref_alt_genome_f)
+
+
+t_ref_alt_genome_f=dummy.data.frame(t_ref_alt_genome_f,  sep="_" , dummy.class="ALL", drop=FALSE)
+names(t_ref_alt_genome_f)
+
+t_ref_alt_genome_g=data.frame(cbind(as.numeric(t_ref_alt_genome_d$fc), t_ref_alt_genome_f))
+names(t_ref_alt_genome_g)
+colnames(t_ref_alt_genome_g) [1]= "fc"
+head(t_ref_alt_genome_g)
+t_ref_alt_genome_h<- t_ref_alt_genome_g[!is.na(t_ref_alt_genome_g$fc), ]
+#as.integer
+
+
+thresh = ncol(t_ref_alt_genome_h)
+
+library(glmnet)
+
+fit <- glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
+cvfit=cv.glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
+cvfit
+s = cvfit$lambda.min
+s
+Coefficients <- coef(fit, s = cvfit$lambda.min)
+#Coefficients
+Active.Index.min <- which(Coefficients != 0)
+Active.Coefficients.min <- Coefficients[Active.Index.min]
+Active.Index.min # identifies the covariates that are active in the model and
+Active.Coefficients.min # shows the coefficients of those covariates
+
+
+coef(fit, s= 1.627215)
+a = predict(fit, newx = as.matrix(t_ref_alt_genome_h[,2:thresh]), s = 1.627215 )
+a
+a*t_ref_alt_genome_h[,1] #checking the direction of c
+
+
+fit <- glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
+cvfit=cv.glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
+s = cvfit$lambda.1se
+s
+Coefficients <- coef(fit, s = cvfit$lambda.1se)
+#Coefficients
+Active.Index.1se <- which(Coefficients != 0)
+Active.Coefficients.1se <- Coefficients[Active.Index.1se]
+Active.Index.1se # identifies the covariates that are active in the model and
+Active.Coefficients.1se # shows the coefficients of those covariates
+
+
+
+if ( t==8 ) {
+ID= refFlat_a$Transcript_ID  
+lambda_min=cvfit$lambda.min
+lambda_1se=cvfit$lambda.1se
+coef_lambda_min=Active.Coefficients.min
+coef_lambda_1se=Active.Coefficients.1se
+
+
+
+}
+  ID2= refFlat_a$Transcript_ID 
+  lambda_min2=cvfit$lambda.min
+  lambda_1se2=cvfit$lambda.1se
+  coef_lambda_min2=Active.Coefficients.min
+  coef_lambda_1se2=Active.Coefficients.1se
+  ID=c(ID, ID2)
+  lambda_min=c(lambda_min, lambda_min2)
+  lambda_1se=c(lambda_1se, lambda_1se2)
+  coef_lambda_min=c(coef_lambda_min, coef_lambda_min2)
+  coef_lambda_1se=c(coef_lambda_1se, coef_lambda_1se2)
   }
+genome_foldchange_glmnet=data.frame(ID, lambda_min,   coef_lambda_min, lambda_1se,  coef_lambda_min)
 
-colnames(ref_alt_genome_b)[136:201]= paste("code", names, sep="_")
-head(ref_alt_genome_b)
 
-#checking of the code above
-ref_alt_genome_b$code_NA12775_A.NA12775_B
-ref_alt_genome_b$NA12775_A.NA12775_B
-ref_alt_genome_b$NA12775_A.NA12775_B.1
-ref_alt_genome_b$ref
-ref_alt_genome_b$alt
 
-#Substing data set to keep snp ID and new columns 
+}
 
-ref_alt_genome_c=ref_alt_genome_b[,c(1, 136:201)]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#delete below later
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ############################################
 #count and fold change (computing fc )
@@ -536,85 +780,8 @@ sub_count_norm_me_fc[sub_count_norm_me_fc>y]<-NA
 sub_count_norm_me_fc_znorm<- (sub_count_norm_me_fc-mean)/sd
 
 
-#####################################################
-#fold change from Degseq output and removing outliers
-#####################################################
-
-sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[t,1]), row.names=NULL)
-# 1 67
-sub_count_fc=sub_count_fc[ ,c(2:67)]
-# 1 66
-#   mean=rowMeans (sub_count_fc , na.rm=TRUE)
-#   sd=rowSds(sub_count_fc, na.rm=TRUE)
-#   x=mean-(2*sd)
-#   y=mean+(2*sd)
-#excluding outliers
-#values above man+2sd and below mean_2sd changes to NA
-#   sub_count_fc[sub_count_fc<x]<-NA
-#   sub_count_fc[sub_count_fc>y]<-NA
-
-dim(sub_count_fc)
-#1 66
-#ci=(ni-mean)/sd
-#sub_count_fold_change<- (sub_count_fold_change-mean)/sd
-
-################################################
-
-#these are the data that we need to use
-sub_count_fc
-sub_count_norm_me_fc_znorm
-ref_alt_genome_c
-head(t_ref_alt_genome_c)
-################################################
-
-#Transposing genome data set to use snps as predictor in linear model
- #Transpose the data
-t_ref_alt_genome_c=as.data.frame(t(ref_alt_genome_c))
-#Keeping the rownames as new column
-t_ref_alt_genome_c$rsID=factor(row.names(t_ref_alt_genome_c))
-#as.character
-t_ref_alt_genome_c= data.frame(lapply(t_ref_alt_genome_c, as.character), stringsAsFactors=FALSE)
-#duplicating first row to colnames
-colnames(t_ref_alt_genome_c)=t_ref_alt_genome_c[1,]
-#deleting first row
-t_ref_alt_genome_c=t_ref_alt_genome_c[-1,]
-#removing individual IDs to first column
-col_1=ncol(t_ref_alt_genome_c)-1
-col_1
-t_ref_alt_genome_c=t_ref_alt_genome_c[, c(ncol(t_ref_alt_genome_c),1:col_1)]
-#changing rsID to ID
-colnames(t_ref_alt_genome_c)[1]="ID"
-
-#as.character
-cc=as.character(list2$ID)
-list2["ID"]=cc
-t_ref_alt_genome_c$fc="NA"
-typeof(list2$ID)
-
-#adding the counts to transposed genome ,  predictors (snps) and dependent variable (fc) in one data
-
-for (p in list2$ID){
-a=which(t_ref_alt_genome_c$ID==sprintf("code_%s_A.%s_B", p, p) )
-a
-print(a)
-b=which(colnames(sub_count_fc)==sprintf("%s_log2.Fold_change", p) )
-print(b)
-t_ref_alt_genome_c$fc[a]=sub_count_fc[,b]
-}
-head(t_ref_alt_genome_c)
-#fc added to the end of data frame
 
 
-# saving the number of columns in data set before creating dummy variables
-
-s=ncol(t_ref_alt_genome_c)
-s
-head(t_ref_alt_genome_c)
-
-
-#changing the order of column : col1 is ID , col2 is fold change and col3 to end is snps 
-t_ref_alt_genome_d=t_ref_alt_genome_c[, c(1, ncol(t_ref_alt_genome_c), 2:(ncol(t_ref_alt_genome_c)-1))]
-head(t_ref_alt_genome_c)
 
 
 
@@ -663,34 +830,7 @@ fit.glm=glmnet( t_ref_alt_genome_e[, 2:ncol(t_ref_alt_genome_e)] , t_ref_alt_gen
 
   
 
-#######creating dummies using dummies package
 
-
-
-
-
-
-
-check2=t_ref_alt_genome_c
-check2=check2[, 2:137]
-names(check2)
-
-
-check3=dummy.data.frame(check2,  sep="_" , dummy.class="ALL", drop=FALSE)
-names(check3)
-
-check4=data.frame(cbind(as.numeric(t_ref_alt_genome_c$fc), check3))
-names(check4)
-colnames(check4) [1]= "fc"
-head(check4)
-check.na <- check4[!is.na(check4$fc), ]
-names(check.na)
-head(check.na)
-check.na[,1]
-
-
-
-thresh = ncol(check.na)
 
 #fit.lm=lm(as.numeric(check.na[,1]) ~ as.matrix(check.na[, 2:30]), data=check.na)
 #summary(fit.lm)
@@ -747,11 +887,3 @@ Active.Index # identifies the covariates that are active in the model and
 Active.Coefficients # shows the coefficients of those covariates
 
 
-#Excounting number of enries in count_fc data set
-
-count_fc$row_counts = apply(count_fc,1,function(x) sum(!is.na(x[1:15700])))
-head(count_fc)
-
-mean(count_fc$row_counts)
-sum(count_fc$row_counts>35)
-hist(count_fc$row_counts)
