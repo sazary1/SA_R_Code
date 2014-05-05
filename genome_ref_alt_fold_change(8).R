@@ -1,27 +1,31 @@
 #############################################################################################################
 # SA
-### Regularized linear model between snps in  100 kb and fols change for the ASE
+### Regularized linear model 
+### predictors : snps in  100 kb
+### dependent variable:  fols change for the ASE from DegSeq
 
-#############################################################################################################
-
+##############################################################################################################
 
 ####################################################################
+
 # Files you need to read in 
-####################################################################
+
 # Derhap_CEU_ID.txt
 # DEGSeq outputs for all the individuals (we get this from eXpress)
 # All the hapmap phase files from chr1 to chr22
 # refFlat_hg18.txt
 # ID_66.txt
 
+####################################################################
+
 setwd ("/Users/saeedehazary/Documents/RNAseq/src")
 
-##########################Reading allele counts for all transcripts in 66 CEU population############################
+##########################Reading allele counts for all transcripts in 66 CEU population#########################
 
 # To avoid running this for loop you can read the file 
 count=read.table("/Users/saeedehazary/Documents/R_files/count.txt", sep="\t", header=T)
 
-####################################################################################################################
+#################################################################################################################
 
 #### Creating list of CEU IDs
 
@@ -504,6 +508,8 @@ write.table(ref_alt_genome_c, file=sprintf("/Users/saeedehazary/Documents/R_file
 ###################################################################################################################################
 
 for (i in list_678){
+  
+print (i)
     
 sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[t,1]), row.names=NULL)
 # 1 67
@@ -562,15 +568,17 @@ list2["ID"]=cc
 t_ref_alt_genome_c$fc="NA"
 typeof(list2$ID)
 
-#### adding the counts to transposed genome ,  predictors (snps) and dependent variable (fc) in one data
+#### adding the fc counts to transposed genome ,  predictors (snps) and dependent variable (fc) in one data
 
-for (p in list2$ID){
+for (p in list2$ID) {
+  
   a=which(t_ref_alt_genome_c$ID==sprintf("code_%s_A.%s_B", p, p) )
   a
   print(a)
   b=which(colnames(sub_count_fc)==sprintf("%s_log2.Fold_change", p) )
   print(b)
   t_ref_alt_genome_c$fc[a]=sub_count_fc[,b]
+  
 }
 
 head(t_ref_alt_genome_c) #fc added to the end of data frame
@@ -645,6 +653,8 @@ cvm_1selambda=cvfit$cvm[which(cvfit$lambda==cvfit$lambda.1se)]
 n_coef_1se=length(Active.Coefficients.1se) 
 cvsd_1selambda=cvfit$cvsd[which(cvfit$lambda==cvfit$lambda.1se)]
 mylist<=list(mlambda, n_coef_min, cvm_mlambda, cvsd_mlambda, lambda1se, n_coef_1se, cvm_1selambda, cvsd_1selambda)
+
+#### z3z is the name of transcript 
 
 assign(sprintf("%s_glmnet_results", z3z ), mylist)
 
