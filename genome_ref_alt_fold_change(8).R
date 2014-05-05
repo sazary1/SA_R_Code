@@ -2,13 +2,14 @@
 # SA
 ### Regularized linear model 
 ### predictors : snps in  100 kb
-### dependent variable:  fols change for the ASE from DegSeq
+### dependent variable:  ASE fold changefrom DegSeq
+### Population: 66 CEU individuals
 
 ##############################################################################################################
 
 ####################################################################
 
-# Files you need to read in 
+# Files you need to read in, in this code
 
 # Derhap_CEU_ID.txt
 # DEGSeq outputs for all the individuals (we get this from eXpress)
