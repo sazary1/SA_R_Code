@@ -462,7 +462,7 @@ ref_alt_genome_b=ref_alt_genome
 ref_alt_genome_b<- data.frame(lapply(ref_alt_genome_b, as.character), stringsAsFactors=FALSE)
    
  
-#### for loop for creating 0,1,2,4 codes for intrapersonal alleles comparision
+#### for loop for creating 0,1,2,3 codes for intrapersonal alleles comparision
 
 ptm <- proc.time()
     for (j in seq(4, 134, 2)) {
