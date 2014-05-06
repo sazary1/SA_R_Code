@@ -351,7 +351,7 @@ count_norm_b=data.frame(count_norm_b, row.names=NULL)
 
 ########################################## Preparing count_fc data ##################################################
 
-#### we need as.character to be able to sort the data 
+#### we need to change to as.character to be able to sort the data 
 
 typeof(count_fold_change$Transcript_ID)
 l=as.character(count_fold_change$Transcript_ID)
@@ -383,7 +383,7 @@ count_fc=data.frame(count_fc, row.names=NULL)
 
 ################################################# forloop to crate a genome file per transcript ######################################################
 
-####packages neede for forloop
+#### packages neede for forloop
 
 install.packages("matrixStats")
 library(matrixStats)
@@ -508,17 +508,27 @@ write.table(ref_alt_genome_c, file=sprintf("/Users/saeedehazary/Documents/R_file
 
 ###################################################################################################################################
 
-for (i in list_678){
+list_210=list_678[1:210]
+
+library(glmnet)
+
+for (yy in list_210){
   
-print (i)
+  print (yy)
+
+  if (yy==156 | yy==441){
+  next
+}
+
+else {
     
-sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[t,1]), row.names=NULL)
+sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[yy,1]), row.names=NULL)
 # 1 67
 
 #### We are pulling out the genome file corresponding to the transcript in sub_count_fc file
 
 z3z=sub_count_fc$Transcript_ID
-ref_alt_genome_c=red.table(sprintf("/Users/saeedehazary/Documents/R_files/%s_ref_alt_genome_c", z3z ), sep="\t", header=T)
+ref_alt_genome_c=read.table(sprintf("/Users/saeedehazary/Documents/R_files/%s_ref_alt_genome", z3z ), sep="\t", header=T)
 
 sub_count_fc=sub_count_fc[ ,c(2:67)]
 
@@ -587,7 +597,6 @@ head(t_ref_alt_genome_c) #fc added to the end of data frame
 #### saving the number of columns in data set before creating dummy variables
 
 s=ncol(t_ref_alt_genome_c)
-s
 head(t_ref_alt_genome_c)
 
 #### changing the order of column : col1 is ID , col2 is fold change and col3 to end is snps 
@@ -616,8 +625,6 @@ t_ref_alt_genome_h<- t_ref_alt_genome_g[!is.na(t_ref_alt_genome_g$fc), ]
 #### glmnet
 
 thresh = ncol(t_ref_alt_genome_h)
-
-library(glmnet)
 
 fit <- glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
 cvfit=cv.glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
@@ -653,12 +660,16 @@ Active.Coefficients.1se # shows the coefficients of those covariates
 cvm_1selambda=cvfit$cvm[which(cvfit$lambda==cvfit$lambda.1se)]
 n_coef_1se=length(Active.Coefficients.1se) 
 cvsd_1selambda=cvfit$cvsd[which(cvfit$lambda==cvfit$lambda.1se)]
-mylist<=list(mlambda, n_coef_min, cvm_mlambda, cvsd_mlambda, lambda1se, n_coef_1se, cvm_1selambda, cvsd_1selambda)
-
+mylist<-list(mlambda, n_coef_min, cvm_mlambda, cvsd_mlambda, lambda1se, n_coef_1se, cvm_1selambda, cvsd_1selambda)
+names(mylist)<- c("min.lambda", "number_coef_min", "cvm_mlambda", "cvsd_mlambda", "lambda1se", "number_coef_1se", "cvm_1selambda", "cvsd_1selambda" )
 #### z3z is the name of transcript 
 
 assign(sprintf("%s_glmnet_results", z3z ), mylist)
 
+#write.list(mylist, filename=sprintf("/Users/saeedehazary/Documents/R_files/%s_glmnet_results", z3z), append=FALSE, closefile = TRUE, outfile)
+#LS.df = as.data.frame(do.call(cbind, mylist))
+
+}
 }
 
 
