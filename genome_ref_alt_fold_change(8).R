@@ -224,11 +224,13 @@ for (i in 1:nmax) {
   }
 }
 
+#### Run one of the below , not all#################################################################################
+
 refFlat.new_100 <- data.frame(cbind(refFlat[,1:6],TSSmax,TSSmin))
 refFlat.new_250 <- data.frame(cbind(refFlat[,1:6],TSSmax,TSSmin))
 refFlat.new_50 <- data.frame(cbind(refFlat[,1:6],TSSmax,TSSmin))
 
-########################################## Excluding some transcripts from refFlat file##############################
+########## Run one of the below, not all,  Excluding some transcripts from refFlat file##############################
 
 #excluding chrX transcripts and duplicte transcripts
 
@@ -285,11 +287,11 @@ k=data.frame(sub ('_', '', refFlat.new_nodup_b$Transcript_ID))
 refFlat.new_nodup_b=cbind(k, refFlat.new_nodup_b)
 colnames(refFlat.new_nodup_b)[3]="T_ID"
 colnames(refFlat.new_nodup_b)[1]="Transcript_ID"
-refFlat.new_nodup_b
 #43070 9
 
 #### only those TRanscript_IDs in refFlat file that we have data for that in count
 
+#refFlat.new_nodup_c=merge(refFlat.new_nodup_b, count_fold_change, by="Transcript_ID", all.count_fold_change=all)
 refFlat.new_nodup_c=merge(refFlat.new_nodup_b, count, by="Transcript_ID", all.count=all)
 dim(refFlat.new_nodup_c)
 #15700 141
@@ -385,24 +387,14 @@ count_fc=data.frame(count_fc, row.names=NULL)
 
 #### packages neede for forloop
 
-install.packages("matrixStats")
+#install.packages("matrixStats")
 library(matrixStats)
 library(gdata)
-install.packages("dummies")
+#install.packages("dummies")
 library(dummies)
 
 #### counting number of enries in count_fc data set
 
-count_fc_2=count_fc
-count_fc_2$row_counts = apply(count_fc_2,1,function(x) sum(!is.na(x[1:15700])))
-head(count_fc_2)
-
-#### list of Transcripts that has more than 35 enries 
-
-sum(count_fc_2$row_counts>35)
-#hist(count_fc_2$row_counts)
-new_count=count_fc[which(count_fc_2$row_counts>35),]
-list_678=row.names(new_count)
 
 #### reading the refrence , alternative alleles file
 
@@ -410,7 +402,9 @@ ref_alt_allchr_consensus_CEU=read.table("/Users/saeedehazary/Documents/RNASeq/sr
 
 #### forloop to crate a genpme file per transcript
 
-for (t in list_678 ) {
+list_386_678=list_678[386:678]
+
+for (t in list_386_678 ) {
   
 print(t)
 
@@ -508,44 +502,58 @@ write.table(ref_alt_genome_c, file=sprintf("/Users/saeedehazary/Documents/R_file
 
 ###################################################################################################################################
 
-list_210=list_678[1:210]
+list_107_382=list_1_382[107:382]
+list_107_382[32]
+list_33=list_107_382[33:length(list_107_382)]
+list_93=list_33[93:length(list_33)]
+list_1_494=list_678[1:494]
 
 library(glmnet)
 
-for (yy in list_210){
+for (yy in list_1_494){
   
   print (yy)
-
-  if (yy==156 | yy==441){
+  
+  if (yy==8320) { 
   next
-}
+  }
+  else {
+  
+  #if (yy==156|yy==258| yy==441 | yy==442 | yy==443 | yy==934|yy==1309 |yy==1318|yy==1365 |yy==2388 |yy==2403|yy==2825|
+       # yy==2900 |yy==3268 |yy==3380 |yy==3528| yy==5269 |yy==5377| yy==6161| yy==6162 | yy==6189){
+  #next
+#}
 
-else {
+#else {
     
 sub_count_fc=data.frame(subset(count_fc, count_fc$Transcript_ID==count_fc[yy,1]), row.names=NULL)
 # 1 67
 
-#### We are pulling out the genome file corresponding to the transcript in sub_count_fc file
-
 z3z=sub_count_fc$Transcript_ID
+
+if (!file.exists(sprintf("/Users/saeedehazary/Documents/R_files/%s_ref_alt_genome", z3z ))) {
+  next
+}
+
+else{
+  
 ref_alt_genome_c=read.table(sprintf("/Users/saeedehazary/Documents/R_files/%s_ref_alt_genome", z3z ), sep="\t", header=T)
 
 sub_count_fc=sub_count_fc[ ,c(2:67)]
-
 # 1 66
-#   mean=rowMeans (sub_count_fc , na.rm=TRUE)
-#   sd=rowSds(sub_count_fc, na.rm=TRUE)
-#   x=mean-(2*sd)
-#   y=mean+(2*sd)
+mean=rowMeans (sub_count_fc , na.rm=TRUE)
+sd=rowSds(sub_count_fc, na.rm=TRUE)
+x=mean-(2*sd)
+y=mean+(2*sd)
 #excluding outliers
-#values above man+2sd and below mean_2sd changes to NA
-#   sub_count_fc[sub_count_fc<x]<-NA
-#   sub_count_fc[sub_count_fc>y]<-NA
-
-dim(sub_count_fc)
+#values below mean_2sd changes to NA
+sub_count_fc[sub_count_fc<x]<-NA
+#dim(sub_count_fc)
 #1 66
 #ci=(ni-mean)/sd
 #sub_count_fold_change<- (sub_count_fold_change-mean)/sd
+
+mean2=rowMeans(abs(sub_count_fc),na.rm=TRUE )
 
 #### Transposing genome data set to use snps as predictor in linear model
 
@@ -556,6 +564,7 @@ t_ref_alt_genome_c=as.data.frame(t(ref_alt_genome_c))
 t_ref_alt_genome_c$rsID=factor(row.names(t_ref_alt_genome_c))
 
 #### as.character
+
 t_ref_alt_genome_c= data.frame(lapply(t_ref_alt_genome_c, as.character), stringsAsFactors=FALSE)
 
 #### duplicating first row to colnames
@@ -567,7 +576,6 @@ t_ref_alt_genome_c=t_ref_alt_genome_c[-1,]
 
 #### removing individual IDs to first column
 col_1=ncol(t_ref_alt_genome_c)-1
-col_1
 t_ref_alt_genome_c=t_ref_alt_genome_c[, c(ncol(t_ref_alt_genome_c),1:col_1)]
 
 #### changing rsID to ID
@@ -577,17 +585,15 @@ colnames(t_ref_alt_genome_c)[1]="ID"
 cc=as.character(list2$ID)
 list2["ID"]=cc
 t_ref_alt_genome_c$fc="NA"
-typeof(list2$ID)
 
 #### adding the fc counts to transposed genome ,  predictors (snps) and dependent variable (fc) in one data
 
 for (p in list2$ID) {
   
   a=which(t_ref_alt_genome_c$ID==sprintf("code_%s_A.%s_B", p, p) )
-  a
-  print(a)
+  #print(a)
   b=which(colnames(sub_count_fc)==sprintf("%s_log2.Fold_change", p) )
-  print(b)
+  #print(b)
   t_ref_alt_genome_c$fc[a]=sub_count_fc[,b]
   
 }
@@ -597,88 +603,105 @@ head(t_ref_alt_genome_c) #fc added to the end of data frame
 #### saving the number of columns in data set before creating dummy variables
 
 s=ncol(t_ref_alt_genome_c)
-head(t_ref_alt_genome_c)
 
 #### changing the order of column : col1 is ID , col2 is fold change and col3 to end is snps 
 
 t_ref_alt_genome_d=t_ref_alt_genome_c[, c(1, ncol(t_ref_alt_genome_c), 2:(ncol(t_ref_alt_genome_c)-1))]
-head(t_ref_alt_genome_d)
-names(t_ref_alt_genome_d)
 
 #######creating dummies using dummies package
 
 t_ref_alt_genome_e=t_ref_alt_genome_d
 t_ref_alt_genome_f=t_ref_alt_genome_e[, 3:ncol(t_ref_alt_genome_e)]
-names(t_ref_alt_genome_f)
 
 t_ref_alt_genome_f=dummy.data.frame(t_ref_alt_genome_f,  sep="_" , dummy.class="ALL", drop=FALSE)
-names(t_ref_alt_genome_f)
 
 t_ref_alt_genome_g=data.frame(cbind(as.numeric(t_ref_alt_genome_d$fc), t_ref_alt_genome_f))
-names(t_ref_alt_genome_g)
 colnames(t_ref_alt_genome_g) [1]= "fc"
-head(t_ref_alt_genome_g)
 t_ref_alt_genome_h<- t_ref_alt_genome_g[!is.na(t_ref_alt_genome_g$fc), ]
 #as.integer
 
 
 #### glmnet
 
+if (yy==list_1_494[1]) {
+
 thresh = ncol(t_ref_alt_genome_h)
 
 fit <- glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
 cvfit=cv.glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
-cvfit
+#cvfit
 mlambda = cvfit$lambda.min
 Coefficients <- coef(fit, s = cvfit$lambda.min)
 #Coefficients
 Active.Index.min <- which(Coefficients != 0)
 Active.Coefficients.min <- Coefficients[Active.Index.min]
-Active.Index.min # identifies the covariates that are active in the model and
+#Active.Index.min # identifies the covariates that are active in the model and
 n_coef_min=length(Active.Coefficients.min) # shows the coefficients of those covariates
 cvm_mlambda=cvfit$cvm[which(cvfit$lambda==cvfit$lambda.min)]
 cvsd_mlambda=cvfit$cvsd[which(cvfit$lambda==cvfit$lambda.min)]
+cvm_mlambda_std=cvm_mlambda/mean2
+T_ID=sprintf("%s", z3z )
+n_snps=nrow(ref_alt_genome_c)
 
-#nzero_mlamda=cvfit$nzero[which(cvfit$lambda==cvfit$lambda.min)]
-#nzero_mlamda
+mylist<-list(T_ID,n_snps, mlambda, n_coef_min, cvm_mlambda, cvsd_mlambda, cvm_mlambda_std)
+names(mylist)<- c("Transcript_ID", "number_of_snps", "min.lambda", "number_coef_min", "cvm_mlambda", "cvsd_mlambda", "cvm_mlambda_std" )
 
-#coef(fit, s= 1.627215)
-#a = predict(fit, newx = as.matrix(t_ref_alt_genome_h[,2:thresh]), s = 1.627215 )
-#a
-#a*t_ref_alt_genome_h[,1] #checking the direction of c
-
-
-fit <- glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
-cvfit=cv.glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
-lambda1se= cvfit$lambda.1se
-Coefficients <- coef(fit, s = cvfit$lambda.1se)
-#Coefficients
-Active.Index.1se <- which(Coefficients != 0)
-Active.Coefficients.1se <- Coefficients[Active.Index.1se]
-Active.Index.1se # identifies the covariates that are active in the model and
-Active.Coefficients.1se # shows the coefficients of those covariates
-cvm_1selambda=cvfit$cvm[which(cvfit$lambda==cvfit$lambda.1se)]
-n_coef_1se=length(Active.Coefficients.1se) 
-cvsd_1selambda=cvfit$cvsd[which(cvfit$lambda==cvfit$lambda.1se)]
-mylist<-list(mlambda, n_coef_min, cvm_mlambda, cvsd_mlambda, lambda1se, n_coef_1se, cvm_1selambda, cvsd_1selambda)
-names(mylist)<- c("min.lambda", "number_coef_min", "cvm_mlambda", "cvsd_mlambda", "lambda1se", "number_coef_1se", "cvm_1selambda", "cvsd_1selambda" )
 #### z3z is the name of transcript 
 
-assign(sprintf("%s_glmnet_results", z3z ), mylist)
-
+#assign(sprintf("%s_glmnet_results", z3z ), mylist)
 #write.list(mylist, filename=sprintf("/Users/saeedehazary/Documents/R_files/%s_glmnet_results", z3z), append=FALSE, closefile = TRUE, outfile)
-#LS.df = as.data.frame(do.call(cbind, mylist))
+
+LS.df_f = as.data.frame(do.call(cbind, mylist))
+
+}
+
+else{
+  
+  thresh = ncol(t_ref_alt_genome_h)
+  fit <- glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
+  cvfit=cv.glmnet(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]), alpha = 1)
+  #cvfit
+  mlambda = cvfit$lambda.min
+  Coefficients <- coef(fit, s = cvfit$lambda.min)
+  #Coefficients
+  Active.Index.min <- which(Coefficients != 0)
+  Active.Coefficients.min <- Coefficients[Active.Index.min]
+  #Active.Index.min # identifies the covariates that are active in the model and
+  n_coef_min=length(Active.Coefficients.min) # shows the coefficients of those covariates
+  cvm_mlambda=cvfit$cvm[which(cvfit$lambda==cvfit$lambda.min)]
+  cvsd_mlambda=cvfit$cvsd[which(cvfit$lambda==cvfit$lambda.min)]
+  cvm_mlambda_std=cvm_mlambda/mean2
+  T_ID=sprintf("%s", z3z )
+  n_snps=nrow(ref_alt_genome_c)
+  
+  mylist<-list(T_ID, n_snps, mlambda, n_coef_min, cvm_mlambda, cvsd_mlambda, cvm_mlambda_std)
+  names(mylist)<- c("Transcript_ID", "number_of_snps", "min.lambda", "number_coef_min", "cvm_mlambda", "cvsd_mlambda", "cvm_mlambda_std" )
+  
+  #assign(sprintf("%s_glmnet_results", z3z ), mylist)
+  #write.list(mylist, filename=sprintf("/Users/saeedehazary/Documents/R_files/%s_glmnet_results", z3z), append=FALSE, closefile = TRUE, outfile)
+  
+  LS.df2 = as.data.frame(do.call(cbind, mylist))
+  LS.df_f= rbind(LS.df_f, LS.df2)
+}
 
 }
 }
+}
+
+write.table(LS.df_f, file="/Users/saeedehazary/Documents/R_files/LS.df_f.txt", sep="\t", row.names=F)
 
 
 
 
+install.packages("covTest")
+library(covTest)
+
+qq=lars.en(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]),lambda2=1)
+qq=lars.glm(as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]),family="binomial")
+covTest(qq, as.matrix(t_ref_alt_genome_h[,2:thresh]), as.numeric(t_ref_alt_genome_h[,1]))
 
 
-
-
+fit#### z3z is the name of transcript 
 
 
 
